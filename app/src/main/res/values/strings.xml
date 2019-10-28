@@ -1,0 +1,107 @@
+<resources>
+    <string name="app_name">ProLight Control</string>
+    <string name="wifi_name">Gremote</string>
+    <string name="welcome_message">Willkommen !!!</string>
+    <string name="icon_description">Gremote v2.0</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="main_activiy_device_found">Gremote gefunden</string>
+    <string name="main_activiy_device_search">Suche nach Gremote</string>
+    <string name="main_activiy_device_not_found">Keine Gremote gefunden.</string>
+    <string name="main_activiy_device_chooser_title">Gremote wählen</string>
+
+    <string name="main_activiy_location_permission_message" translatable="false">Um nach Ihrer Gremote suchen zu können, müssen wir Ihren Standort kennen.</string>
+    <string name="main_activiy_location_permission_title" translatable="false">Standortberechtigung</string>
+
+    <string name="wifi_scanner_scan_success">Die Suche war Erfolgreich &#8230;</string>
+    <string name="wifi_scanner_scan_failure">Die Suche ist Fehlgeschlagen, bitte noch einmal versuchen.</string>
+    <string name="wifi_scanner_scan_not_possible">Eine Suche war nicht möglich, bitte noch einmal versuchen.</string>
+
+    <string name="wifi_scanner_enable_wifi_title">WLan einschalten</string>
+    <string name="wifi_scanner_enable_wifi_message" translatable="false">Im Moment ist das WLan ausgeschaltet\num Ihre gremote zu konfigurieren, muss es aktiviert werden.\n\nSoll das WLan jetzt aktiviert werden?</string>
+
+    <string name="wifi_scanner_disable_wifi_title" translatable="false">WLan ausschalten</string>
+    <string name="wifi_scanner_disable_wifi_message" translatable="false">Soll das WLan wieder ausgeschaltet werden?</string>
+    <string name="wifi_scanner_disable_wifi_success" translatable="false">WLan erfolgreich ausgeschaltet.</string>
+    <string name="wifi_scanner_disable_wifi_failed" translatable="false">WLan konnte nicht ausgeschaltet werden.</string>
+
+    <string name="wifi_connector_state_connected" translatable="false">Verbindung hergestellt.</string>
+    <string name="wifi_connector_state_connecting" translatable="false">Verbindung wird hergestellt.</string>
+    <string name="wifi_connector_state_disconnected" translatable="false">Verbindung beendet.</string>
+    <string name="wifi_connector_state_disconnecting" translatable="false">Verbindung wird beendet.</string>
+    <string name="wifi_connector_state_suspended" translatable="false">Verbindung aufgehoben.</string>
+    <string name="wifi_connector_connected_to" translatable="false">Verbunden mit</string>
+
+    <string name="remote_configuration_add_key_title" translatable="false">Neue Taste</string>
+    <string name="remote_configuration_add_key_message" translatable="false">Bitte drücken Sie die folgende Taste auf Ihrer Ferbedienung:</string>
+    <string name="remote_configuration_add_key_positive" translatable="false">nächste Taste</string>
+    <string name="remote_configuration_add_key_negative" translatable="false">Eingabe beenden</string>
+    <string name="remote_configuration_add_key_neutral" translatable="false">Abbrechen</string>
+
+    <string name="remote_configuration_fin_fb_title" translatable="false">Fernbedienung abgeschlossen</string>
+    <string name="remote_configuration_fin_fb_message" translatable="false">Die Eingabe Ihrer Fernbedienung wurde abgeschlossen.</string>
+    <string name="remote_configuration_fin_fb_positive" translatable="false">Nächste Fernbedienung einlesen?</string>
+    <string name="remote_configuration_fin_fb_negative" translatable="false">Configuration speichern!</string>
+    <string name="remote_configuration_fin_fb_neutral" translatable="false">Abbrechen</string>
+
+    <string name="remote_configuration_end_title" translatable="false">Konfiguration gespeichert</string>
+    <string name="remote_configuration_end_message" translatable="false">Die Konfiguration wurde gespeichert.\nSie können Ihre Gremote jetzt verwenden.</string>
+    <string name="remote_configuration_end_title_failure" translatable="false">Konfiguration nicht gespeichert</string>
+    <string name="remote_configuration_end_message_failure" translatable="false">Die Konfiguration wurde nicht gespeichert.\nSie können Ihre Gremote nicht verwenden.\nBitte versuchen Sie es erneut.</string>
+    <string name="remote_configuration_end_positive" translatable="false">Beenden!</string>
+    <string name="remote_configuration_end_negative" translatable="false">Neue Konfiguration starten?</string>
+    <string name="main_activiy_choose_keys" translatable="false">Tasten auswählen</string>
+    <string name="main_activiy_keys_chooser_title" translatable="false">Tasten wählen</string>
+
+    <string name="remote_configuration_remote" translatable="false">Fernbedienung</string>
+    <string name="remote_configuration_original_remote" translatable="false">Original Fernbedienung</string>
+    <string name="remote_configuration_success" translatable="false">Speichern erfolgreich.</string>
+    <string name="remote_configuration_failure" translatable="false">Speichern fehlgeschlagen.</string>
+    <string name="remote_configuration_add_key_remotekey" translatable="false">Fernbedienungstaste</string>
+    <string name="remote_configuration_add_key_remote" translatable="false">Fernbedienung</string>
+    <string name="legal_notice_activity_title">Impressum</string>
+    <string name="legal_notice_activity_message" translatable="false">Herzlich Willkommen,\nwir sind die coolsten.\n\nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.
+Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer</string>
+
+    <string-array name="remote_configuration_keys">
+        <item>Power</item>
+        <item>Programm hoch</item>
+        <item>Programm runter</item>
+        <item>Lauter</item>
+        <item>Leiser</item>
+        <item>Taste 1</item>
+        <item>Taste 2</item>
+        <item>Taste 3</item>
+        <item>Taste 4</item>
+        <item>Taste 5</item>
+        <item>Taste 6</item>
+        <item>Taste 7</item>
+        <item>Taste 8</item>
+        <item>Taste 9</item>
+        <item>Taste 0</item>
+        <item>Pfeil hoch</item>
+        <item>Pfeil runter</item>
+        <item>Pfeil rechts</item>
+        <item>Pfeil links</item>
+        <item>OK/Bestätigung</item>
+        <item>Quelle/Source</item>
+        <item>Ton aus/Mute</item>
+        <item>Teletext</item>
+        <item>Kanal-Liste</item>
+        <item>Menü</item>
+        <item>SMART</item>
+        <item>Guide</item>
+        <item>Tools</item>
+        <item>Info</item>
+        <item>Zurück/Return</item>
+        <item>Ende/Exit</item>
+        <item>Rot</item>
+        <item>Grün</item>
+        <item>Gelb</item>
+        <item>Blau</item>
+    </string-array>
+</resources>
