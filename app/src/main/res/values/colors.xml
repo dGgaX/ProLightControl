@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorPrimary">#bababa</color>
+    <color name="colorPrimaryDark">#7f7f7f</color>
+    <color name="colorAccent">#ffd966</color>
+    <color name="colorText">#ed7d31</color> <!-- font: calibri -->
 </resources>

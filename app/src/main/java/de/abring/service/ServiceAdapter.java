@@ -1,19 +1,19 @@
 package de.abring.service;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import work.fida.fidaremote.R;
+import de.abring.prolightcontrol.R;
 
 public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ServiceViewHolder> {
     private Context context;
@@ -81,9 +81,9 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ServiceV
 
         holder.icon.setImageResource(service.getIcon());
         if (service.isInactiv()) {
-            holder.icon.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccentTwo));
+            //holder.icon.setBackgroundColor(get R.color.colorPrimaryDark);
         } else {
-            holder.icon.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
+            //holder.icon.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
         }
         if (service.isShowBucket()) {
             holder.removeIcon.setVisibility(View.VISIBLE);

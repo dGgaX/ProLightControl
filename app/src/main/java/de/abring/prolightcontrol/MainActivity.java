@@ -1,6 +1,8 @@
 package de.abring.prolightcontrol;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -14,6 +16,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,8 +32,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jmdns.ServiceInfo;
+
+import de.abring.MDNS.MDNS;
+import de.abring.MDNS.MDNSHandler;
 import de.abring.internet.DeviceCommunicator;
-import de.abring.remotecontrol.remote.RemoteConfigurator;
+import de.abring.service.Service;
+import de.abring.service.Services;
+import de.abring.wifi.WifiConnector;
+import de.abring.wifi.WifiScanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,12 +58,14 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView text;
     private FloatingActionButton fab_scan_wifi;
-    private FloatingActionButton fab_choose_keys;
 
     private WifiManager wifiManager;
     private WifiInfo connectedNetworkWifiInfo;
 
-    RemoteConfigurator remoteConfigurator;
+    private MDNS mDNS = null;
+    private Services services;
+
+    public static MDNSHandler serviceHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,18 +78,11 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         text = findViewById(R.id.textView);
         fab_scan_wifi = findViewById(R.id.fab_scan_wifi);
-        fab_choose_keys = findViewById(R.id.fab_choose_keys);
 
         fab_scan_wifi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 getWifi();
-            }
-        });
-        fab_choose_keys.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                remoteConfigurator.chooseKeys();
             }
         });
 
@@ -108,20 +113,33 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
-        remoteConfigurator = new RemoteConfigurator(this) {
-            @Override
-            public void finished() {
-                text.setText(R.string.welcome_message);
-                reconnectToDefaultNetwork();
-                fab_scan_wifi.show();
-                fab_choose_keys.show();
-                List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-                for (WifiConfiguration i : list) {
-                    if (i.SSID != null && i.SSID.startsWith("\"" + getResources().getString(R.string.wifi_name))) {
-                        wifiManager.removeNetwork(i.networkId);
-                    }
+        services = new Services(this);
+        serviceHandler = new MDNSHandler(services){
+            public void handleMessage(Message msg){
+                String text = "";
+                switch(msg.what){
+                    case MDNSHandler.SERVICE_FOUND:
+                        services.addService(Service.fromServiceInfo((ServiceInfo) msg.obj));
+                        text = "Fida found!";
+                        break;
+                    case MDNSHandler.SERVICE_RESOLVED:
+                        ServiceInfo updateInfo = (ServiceInfo) msg.obj;
+                        if (services.updateService(Service.fromServiceInfo(updateInfo))) {
+                            text = "Fida " + updateInfo.getName() + " updated!";
+                        }
+                        break;
+                    case MDNSHandler.SERVICE_REMOVED:
+                        ServiceInfo deleteInfo = (ServiceInfo) msg.obj;
+                        if (services.removeService(Service.fromServiceInfo(deleteInfo))) {
+                            text = "Fida " + deleteInfo.getName() + " deleted!";
+                        }
+                        break;
                 }
+                if (!text.isEmpty()) {
+                    Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+
             }
         };
     }
@@ -131,13 +149,13 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
             builder
-                .setMessage(R.string.main_activiy_location_permission_message)
-                .setTitle(R.string.main_activiy_location_permission_title)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 0x12345);
-                    }
-                });
+                    .setMessage(R.string.main_activiy_location_permission_message)
+                    .setTitle(R.string.main_activiy_location_permission_title)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 0x12345);
+                        }
+                    });
 
 
             AlertDialog dialog = builder.create();
@@ -146,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
             dialog.show();
         } else {
             fab_scan_wifi.hide();
-            fab_choose_keys.hide();
             progressBar.setVisibility(View.VISIBLE);
             text.setText(R.string.main_activiy_device_search);
             wifiScanner.start();
@@ -217,76 +234,62 @@ public class MainActivity extends AppCompatActivity {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
             builder
-                .setTitle(R.string.main_activiy_device_chooser_title)
-                .setSingleChoiceItems(foundSSIDs.toArray(new CharSequence[foundSSIDs.size()]), -1, new DialogInterface.OnClickListener() {
+                    .setTitle(R.string.main_activiy_device_chooser_title)
+                    .setSingleChoiceItems(foundSSIDs.toArray(new CharSequence[foundSSIDs.size()]), -1, new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Log.d(TAG, "onClick: changeDevice to: " + foundSSIDs.get(which));
-                        text.setText(getResources().getString(R.string.main_activiy_device_found));
-                        if (wifiManager.getConnectionInfo().getBSSID().equals(foundBSSIDs.get(which))) {
-                            new DeviceCommunicator.Blink(DeviceCommunicator.Blink.TOGGLE) {
-                                @Override
-                                public void finished(boolean success) {}
-                            };
-                            if (state.equals(NetworkInfo.DetailedState.CONNECTED)) {
-                                text.setText(getResources().getString(R.string.wifi_connector_connected_to) + " " + wifiManager.getConnectionInfo().getSSID());
-                            }
-                        } else {
-                            final WifiConnector wifiConnector = new WifiConnector(getApplicationContext()) {
-                                @Override
-                                public void update() {
-                                    state = getState();
-                                    Log.d(TAG, "connect: state: " + state.name());
-
-                                    if (isState(NetworkInfo.DetailedState.CONNECTED)) {
-                                        text.setText(getResources().getString(R.string.wifi_connector_connected_to) + " " + getSSID());
-                                    } else if (isState(NetworkInfo.DetailedState.CONNECTING)) {
-                                        Toast.makeText(getApplicationContext(), R.string.wifi_connector_state_connecting, Toast.LENGTH_SHORT).show();
-                                    } else if (isState(NetworkInfo.DetailedState.DISCONNECTED)) {
-                                        Toast.makeText(getApplicationContext(), R.string.wifi_connector_state_disconnected, Toast.LENGTH_SHORT).show();
-                                    } else if (isState(NetworkInfo.DetailedState.DISCONNECTING)) {
-                                        Toast.makeText(getApplicationContext(), R.string.wifi_connector_state_disconnecting, Toast.LENGTH_SHORT).show();
-                                    } else if (isState(NetworkInfo.DetailedState.SUSPENDED)) {
-                                        Toast.makeText(getApplicationContext(), R.string.wifi_connector_state_suspended, Toast.LENGTH_SHORT).show();
-                                    }
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Log.d(TAG, "onClick: changeDevice to: " + foundSSIDs.get(which));
+                            text.setText(getResources().getString(R.string.main_activiy_device_found));
+                            if (wifiManager.getConnectionInfo().getBSSID().equals(foundBSSIDs.get(which))) {
+                                new DeviceCommunicator.Blink(DeviceCommunicator.Blink.TOGGLE) {
+                                    @Override
+                                    public void finished(boolean success) {}
+                                };
+                                if (state.equals(NetworkInfo.DetailedState.CONNECTED)) {
+                                    text.setText(getResources().getString(R.string.wifi_connector_connected_to) + " " + wifiManager.getConnectionInfo().getSSID());
                                 }
-                            };
-                            wifiConnector.execute(foundSSIDs.get(which), foundBSSIDs.get(which), WPA_KEY);
+                            } else {
+                                final WifiConnector wifiConnector = new WifiConnector(getApplicationContext()) {
+                                    @Override
+                                    public void update(String SSID) {
+                                        text.setText(getResources().getString(R.string.wifi_connector_connected_to) + " " + SSID);
+                                    }
+
+                                };
+                                wifiConnector.execute(foundSSIDs.get(which), foundBSSIDs.get(which), WPA_KEY);
+                            }
                         }
-                    }
-                })
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        Log.d(TAG, "onClick: ok");
-                        if (state.equals(NetworkInfo.DetailedState.CONNECTED)) {
-                            configDevice();
-                        } else {
+                    })
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Log.d(TAG, "onClick: ok");
+                            if (state.equals(NetworkInfo.DetailedState.CONNECTED)) {
+                                configDevice();
+                            } else {
+                                Log.d(TAG, "onClick: cancel");
+                                new DeviceCommunicator.Blink(DeviceCommunicator.Blink.OFF) {
+                                    @Override
+                                    public void finished(boolean success) {}
+                                };
+                                //reconnectToDefaultNetwork();
+                                fab_scan_wifi.show();
+                                dialog.dismiss();
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
                             Log.d(TAG, "onClick: cancel");
                             new DeviceCommunicator.Blink(DeviceCommunicator.Blink.OFF) {
                                 @Override
                                 public void finished(boolean success) {}
                             };
                             //reconnectToDefaultNetwork();
-                            fab_choose_keys.show();
                             fab_scan_wifi.show();
                             dialog.dismiss();
                         }
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        Log.d(TAG, "onClick: cancel");
-                        new DeviceCommunicator.Blink(DeviceCommunicator.Blink.OFF) {
-                            @Override
-                            public void finished(boolean success) {}
-                        };
-                        //reconnectToDefaultNetwork();
-                        fab_choose_keys.show();
-                        fab_scan_wifi.show();
-                        dialog.dismiss();
-                    }
-                });
+                    });
 
             AlertDialog dialog = builder.create();
             dialog.setCancelable(false);
@@ -317,8 +320,8 @@ public class MainActivity extends AppCompatActivity {
             public void finished(boolean success) {}
         };
 
-        fab_choose_keys.hide();
-        remoteConfigurator.start();
+
+     //   remoteConfigurator.start();
 
     }
 }

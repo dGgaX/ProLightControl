@@ -10,14 +10,13 @@ import java.util.List;
 
 import javax.jmdns.ServiceInfo;
 
-import work.fida.fidaremote.R;
-import work.fida.fidaremote.data.Remote;
+import de.abring.prolightcontrol.R;
 
 public class Service implements Serializable {
 
     public static final String SIGNAL_WS_TCP_LOCAL = "_ws._tcp.local.";
     public static final String SIGNAL_APPLICATION = "ws";
-    public static final String SIGNAL_PREFIX = "FIDA_";
+    public static final String SIGNAL_PREFIX = "ProLight";
 
     public static Service fromServiceInfo (ServiceInfo info) {
         if (info.getApplication().equals(SIGNAL_APPLICATION) &&
@@ -60,8 +59,8 @@ public class Service implements Serializable {
         this.name = "";
         this.uri = stringToURI("");
         this.remotes = new ArrayList<>();
-        this.icon = R.drawable.ic_service;
-        this.removeIcon = R.drawable.ic_delete;
+        this.icon = R.drawable.ic_icon_wt;
+        this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 
@@ -69,8 +68,8 @@ public class Service implements Serializable {
         this.name = name;
         this.uri = stringToURI("");
         this.remotes = new ArrayList<>();
-        this.icon = R.drawable.ic_service;
-        this.removeIcon = R.drawable.ic_delete;
+        this.icon = R.drawable.ic_icon_wt;
+        this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 
@@ -78,8 +77,8 @@ public class Service implements Serializable {
         this.name = name;
         this.uri = uri;
         this.remotes = new ArrayList<>();
-        this.icon = R.drawable.ic_service;
-        this.removeIcon = R.drawable.ic_delete;
+        this.icon = R.drawable.ic_icon_wt;
+        this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 
@@ -87,8 +86,8 @@ public class Service implements Serializable {
         this.name = name;
         this.uri = stringToURI(uri);
         this.remotes = new ArrayList<>();
-        this.icon = R.drawable.ic_service;
-        this.removeIcon = R.drawable.ic_delete;
+        this.icon = R.drawable.ic_icon_wt;
+        this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 

@@ -14,7 +14,7 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
-import work.fida.fidaremote.MainActivity;
+import de.abring.prolightcontrol.MainActivity;
 
 import static android.util.Log.e;
 
@@ -28,9 +28,9 @@ public class MDNS extends Thread {
     private final MDNSHandler handler;
     private final ServiceListener serviceListener;
 
-    public MDNS(MainActivity mainActivity) {
-        this.inetAddress = getIP(mainActivity);
-        this.handler = mainActivity.getServiceHandler();
+    public MDNS(Context context) {
+        this.inetAddress = getIP(context);
+        this.handler = ((MainActivity) context).serviceHandler;
         this.serviceListener = new ServiceListener() {
             @Override
             public void serviceAdded(ServiceEvent event) {
@@ -56,9 +56,9 @@ public class MDNS extends Thread {
     }
 
 
-    private InetAddress getIP(MainActivity mainActivity) {
+    private InetAddress getIP(Context context) {
         try {
-            WifiManager wifiMgr = (WifiManager) mainActivity.getSystemService(Context.WIFI_SERVICE);
+            WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
             WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
             int intAddress = wifiInfo.getIpAddress();
             byte[] byteAddress = {(byte)(intAddress & 0xff), (byte)(intAddress >> 8 & 0xff), (byte)(intAddress >> 16 & 0xff), (byte)(intAddress >> 24 & 0xff)};

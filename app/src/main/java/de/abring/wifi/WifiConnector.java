@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-import de.abring.remotecontrol.R;
+import de.abring.prolightcontrol.R;
 
 public abstract class WifiConnector extends AsyncTask<String, Integer, Boolean> {
 
@@ -32,7 +32,7 @@ public abstract class WifiConnector extends AsyncTask<String, Integer, Boolean> 
                 Log.d(TAG, "connect: connected to " + wifiManager.getConnectionInfo().getSSID());
                 Toast.makeText(context, R.string.wifi_connector_state_connected, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "connect: execute connected-method!!!");
-                connected(wifiManager.getConnectionInfo().getSSID());
+                update(wifiManager.getConnectionInfo().getSSID());
             }
         }
     };
@@ -114,6 +114,6 @@ public abstract class WifiConnector extends AsyncTask<String, Integer, Boolean> 
         return false;
     }
 
-    public abstract void connected(String SSID);
+    public abstract void update(String SSID);
 
 }

@@ -1,13 +1,13 @@
 package de.abring.service;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -15,11 +15,6 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.jmdns.ServiceInfo;
-
-import work.fida.fidaremote.WebIRActivity;
-import work.fida.fidaremote.data.Remote;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -32,13 +27,13 @@ public class Services {
 
     public static final int INPUT_ACTIVITY_RESULT = 42;
     public static final String INPUT_ACTIVITY_SERVICE = "service";
-    private final AppCompatActivity context;
+    private final Context context;
     private final List<Service> list;
 
     private RecyclerView.Adapter adapter;
     private boolean showDelete = false;
 
-    public Services(AppCompatActivity context) {
+    public Services(Context context) {
         this.context = context;
         list = load();
         adapter = new ServiceAdapter(context, list);
@@ -89,9 +84,11 @@ public class Services {
         Toast toast = Toast.makeText(context.getApplicationContext(), "Fida " + service.getName() + " chosen!", Toast.LENGTH_SHORT);
         toast.show();
 
+        /*
         Intent intent = new Intent(context, WebIRActivity.class);
         intent.putExtra(INPUT_ACTIVITY_SERVICE, service);
         context.startActivityForResult(intent, INPUT_ACTIVITY_RESULT);
+        */
     }
 
     private List<Service> load() {
