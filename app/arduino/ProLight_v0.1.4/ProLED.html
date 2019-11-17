@@ -1,0 +1,78 @@
+<html>
+	<head>
+		<title>ProLED</title>
+	</head>
+	<body>
+		<h1>ProLED</h1>
+		<hr />
+		<p>PowerOn</p>
+		<form action="http://192.168.178.68/setPowerOn" target="_blank">
+			<input type="radio" name="powerOn" value="true" checked="checked"/>&nbsp;On<br />
+			<input type="radio" name="powerOn" value="false" />&nbsp;Off<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<p>RandomColor</p>
+		<form action="http://192.168.178.68/setLedMode" target="_blank">
+			<input type="radio" name="ledMode" value="stat"checked="checked">&nbsp;Statisch<br />
+			<input type="radio" name="ledMode" value="wave">&nbsp;Wave<br />
+			<input type="radio" name="ledMode" value="stro">&nbsp;Strobo<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<p>RandomColor</p>
+		<form action="http://192.168.178.68/setRandomColor" target="_blank">
+			<input type="radio" name="randomColor" value="true" checked="checked"/>&nbsp;On<br />
+			<input type="radio" name="randomColor" value="false" />&nbsp;Off<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<p>Color-Code</p>
+		<form action="http://192.168.178.68/setColor" target="_blank">
+		<select name="code">
+			<option value="" selected="selected" disabled="disabled">choose</option>
+			<option value="0">Red</option>
+			<option value="1">???</option>
+			<option value="2">???</option>
+			<option value="3">???</option>
+			<option value="4">Green</option>
+			<option value="5">???</option>
+			<option value="6">???</option>
+			<option value="7">???</option>
+			<option value="8">Blue</option>
+			<option value="9">???</option>
+			<option value="10">???</option>
+			<option value="11">???</option>
+			<option value="12">???</option>
+			<option value="13">???</option>
+			<option value="14">???</option>
+			<option value="15">white</option>
+		</select>&nbsp;Code<br />
+		<input type="submit" value="set" />
+		</form><hr />
+		<p>Color-Red-Green-Blue</p>
+		<form action="http://192.168.178.68/setColor" target="_blank">
+			<input type="range" name="red" min="0" max="1023"/>&nbsp;Red<br />
+			<input type="range" name="green" min="0" max="1023"/>&nbsp;Green<br />
+			<input type="range" name="blue" min="0" max="1023"/>&nbsp;Blue<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<p>Dimmer</p>
+		<form action="http://192.168.178.68/setDimmer" target="_blank">
+			<input type="range" name="dimmer" min="0" max="1023"/>&nbsp;Dimmer<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<p>Delay</p>
+		<form action="http://192.168.178.68/setDelay" target="_blank">
+			<input type="range" name="stat" min="0" max="30000"/>&nbsp;Statisch<br />
+			<input type="range" name="wave" min="0" max="30000"/>&nbsp;Wave<br />
+			<input type="range" name="stroOn" min="0" max="30000"/>&nbsp;Strobo&nbsp;On<br />
+			<input type="range" name="stroOff" min="0" max="30000"/>&nbsp;Strobo&nbsp;Off<br />
+			<input type="submit" value="set" />
+		</form><hr />
+		<form action="http://192.168.178.68/setConfig" target="_blank">
+			<input type="text" name="username" value="admin"/>&nbsp;Username<br />
+			<input type="passwor" name="appassword" value=""/>&nbsp;AP&nbsp;Password<br />
+			<input type="text" name="ssid" value=""/>&nbsp;SSID<br />
+			<input type="text" name="password" value=""/>&nbsp;Password<br />
+			<input type="submit" value="set" />
+		</form><hr />
+	</body>
+</html>
