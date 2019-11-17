@@ -17,7 +17,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LegalNoticeActivity"></activity>
+        <activity
+            android:name=".PlayActivity"
+            android:label="@string/title_activity_play"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="de.abring.prolightcontrol.MainActivity" />
+        </activity>
+        <activity android:name=".LegalNoticeActivity" />
         <activity
             android:name=".SplashActivity"
             android:theme="@style/AppTheme.SplashScreen">

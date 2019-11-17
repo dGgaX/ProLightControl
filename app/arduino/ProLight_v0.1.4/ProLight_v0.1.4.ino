@@ -54,6 +54,7 @@
                   - Werte speichern
                   - Dimmer Delay
                   - Wave reparieren
+                  - /setConfig (wifissid (String), wifipassword (String), extention (String))
 */
 
 // Die includes
@@ -63,7 +64,7 @@
 #include <ESP8266WebServer.h>                 // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/
 #include <FS.h>                               // https://arduino-esp8266.readthedocs.io/en/latest/                           Version 2.5.0
 #include <WebSocketsServer.h>                 // https://github.com/Links2004/arduinoWebSockets                              Version 2.1.1
-#include <math.h>                             // just in case
+//#include <math.h>                             // just in case
 #include <ESP8266HTTPUpdateServer.h>
 
 // definition der Ausgänge
@@ -80,6 +81,9 @@ String deviceVersion        = "0.1.3";        // setze die Versionsnummer
 String apPassword           = "vierzigzwei";  // das Passwort für den AccessPoint
 const char* username        = "admin";        // Webupdate: Username
 const char* update_path     = "/firmware";    // Adresse zum Updaten http://deineipadresse/update_path
+String ssid = "";
+String password = "";
+String deviseNameExtention = "";
 bool powerOn                = false;          // standartmäßig Ausgeschaltet
 unsigned int dimmer         = 1024;           // standartmäßig auf 100% (0 = 0%, 1024 = 100%)
 const byte stat = 0;                          // statische Beleuchtung
@@ -97,11 +101,29 @@ unsigned long waveEndMillis = 0;              // standartmäßig 0 ms bis zum n�
 unsigned long stroEndOnMillis   = 0;          // standartmäßig 0 ms bis zum nächsten modeLoop
 unsigned long stroEndOffMillis  = 0;          // standartmäßig 0 ms bis zum nächsten modeLoop
 bool randomColor            = false;          // standartmäßig wird keine neue Farbe gesetzt
-unsigned int color[3]       = {976, 656, 656};// standartmäßig setze die Farbe auf "sandy brown"
-unsigned int waveColor[3]   = {976, 656, 656};// standartmäßig setze die Farbe auf "sandy brown"
 bool waveToColor            = true;           // wir befinden uns nicht in einem ModeChange
 bool stroNotSet            = true;           // wir befinden uns nicht in einem ModeChange
 bool modeChange             = true;          // wir befinden uns nicht in einem ModeChange
+int defColors[16][3]        = {               // Die Vordefinierten Farben
+  {1023,    0,    0},                         // Rot
+  {1023,  511,    0},                         //
+  {1023, 1023,    0},                         // Gelb
+  { 511, 1023,    0},                         //
+  {   0, 1023,    0},                         // Grün
+  {   0, 1023,  511},                         //
+  {   0, 1023, 1023},                         // BlauGrün
+  {   0,  511, 1023},                         //
+  {   0,    0, 1023},                         // Blau
+  { 511,    0, 1023},                         //
+  {1023,    0, 1023},                         // Lila
+  {1023,    0,  511},                         //
+  {1023,  511,  511},                         // ?
+  { 511, 1023,  511},                         // ?
+  { 511,  511, 1023},                         // ?
+  {1023, 1023, 1023}                          // Weiss
+};
+int color[3]       = {976, 656, 656};// standartmäßig setze die Farbe auf "sandy brown"
+int waveColor[3]   = {976, 656, 656};// standartmäßig setze die Farbe auf "sandy brown"
 
 //Lade Bibliotheken
 ESP8266WebServer server(80);                  // lade den WebServer an Port 80
@@ -143,10 +165,7 @@ void setup() {
   //lade Config, falls möglich
   if (debug) Serial.println("Lade Config");
   File file;
-  String ssid = "";
-  String password = "";
-  String deviseNameExtention = "";
-
+  
   file = SPIFFS.open("/config/ssid.txt", "r");
   if (file) {
     ssid = file.readString();
@@ -181,6 +200,8 @@ void setup() {
     Serial.print("Verbinde ");
   }
   IPAddress ipAddress;
+  WiFi.hostname(deviceName.c_str());
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
   byte count = 0;
   while (WiFi.status() != WL_CONNECTED && count < 25) {
@@ -220,6 +241,7 @@ void setup() {
       Serial.println("Password          :  " + apPassword);
     }
     if (debug) Serial.println("Starte AP.");
+    WiFi.mode(WIFI_AP);
     bool wifiEstablished = WiFi.softAP(deviceName.c_str(), apPassword.c_str());
     if (wifiEstablished) {
       ipAddress = WiFi.softAPIP();
@@ -288,9 +310,8 @@ void loop() {
         if (loopStartMillis > statEndMillis) {
           if (randomColor) {
             writeRandomColor();
-          } else {
-            writeColor(color[0], color[1], color[2]);
           }
+          writeColor(color[0], color[1], color[2]);
         }
         if (modeChange || loopStartMillis > statEndMillis) {
           statEndMillis = loopStartMillis + delayStat;
@@ -300,9 +321,9 @@ void loop() {
         if (loopStartMillis < waveEndMillis) {
           long millisLeft = waveEndMillis - loopStartMillis;
           double wayGone = 1.0 - ((double) millisLeft / (double) delayWave);
-          unsigned int red;
-          unsigned int green;
-          unsigned int blue;
+          int red;
+          int green;
+          int blue;
           if (waveToColor) {
             red   = waveColor[0] + round((color[0] - waveColor[0]) * wayGone);
             green = waveColor[1] + round((color[1] - waveColor[1]) * wayGone);
@@ -345,9 +366,8 @@ void loop() {
             stroNotSet = false;
             if (randomColor) {
               writeRandomColor();
-            } else {
-              writeColor(color[0], color[1], color[2]);
             }
+            writeColor(color[0], color[1], color[2]);
           }
         } else if (loopStartMillis < stroEndOffMillis) {
           writeColor(0, 0, 0);
@@ -389,6 +409,7 @@ void addServerHandler() {
   server.on("/setDimmer", setDimmer);
   server.on("/getLedMode", getLedMode);
   server.on("/setLedMode", setLedMode);
+  server.on("/getConfig", getConfig);
   server.on("/setConfig", setConfig);
   server.on("/doRestart", doRestart);
 }
@@ -461,6 +482,13 @@ void setColor() {
   }
   if (server.hasArg("blue")) {
     color[2] = server.arg("blue").toInt();
+    if (debug) {
+      Serial.print(" blue: ");
+      Serial.print(color[2]);
+    }
+  }
+  if (server.hasArg("code")) {
+    writeColor(server.arg("code").toInt());
     if (debug) {
       Serial.print(" blue: ");
       Serial.print(color[2]);
@@ -612,16 +640,38 @@ void setLedMode() {
   if (debug) Serial.println(" ok");
 }
 
+void getConfig() {
+  if (debug) Serial.print("/getColor:");
+  String json = "{\"config\": {\"ssid\": \"";
+  json += ssid;
+  if (server.hasArg("username") &&
+      server.hasArg("appassword") &&
+      server.arg("username") == username &&
+      server.arg("appassword") == apPassword) {
+
+    json += "\", \"password\": \"";
+    json += password;
+  
+  }
+  json += "\", \"extention\": \"";
+  json += deviseNameExtention;
+  json += "\"}}";
+  server.send(200, "application/json", json);
+  if (debug) Serial.println(json);
+}
+
 void setConfig() {
   if (debug) Serial.print("/setConfig: ");
   if (server.hasArg("username") &&
-      server.hasArg("password") &&
+      server.hasArg("appassword") &&
       server.arg("username") == username &&
-      server.arg("password") == apPassword) {
+      server.arg("appassword") == apPassword) {
+    bool done = true;
     if (server.hasArg("ssid")) {
       if (writeToFile("ssid.txt", server.arg("ssid"))) {
         if (debug) Serial.println("SSID written.");
       } else {
+        done = false;
         if (debug) Serial.println("SSID writing failed.");
       }
     }
@@ -629,6 +679,7 @@ void setConfig() {
       if (writeToFile("password.txt", server.arg("password"))) {
         if (debug) Serial.println("Password written.");
       } else {
+        done = false;
         if (debug) Serial.println("Password writing failed.");
       }
     }
@@ -636,11 +687,17 @@ void setConfig() {
       if (writeToFile("extention.txt", server.arg("extention"))) {
         if (debug) Serial.println("Extention written.");
       } else {
+        done = false;
         if (debug) Serial.println("Extention writing failed.");
       }
     }
-    server.send(200, "text/plain", "ok");
-    if (debug) Serial.println("ok");
+    if (done) {
+      server.send(200, "text/plain", "ok");
+      if (debug) Serial.println("ok");
+    } else {
+      server.send(200, "text/plain", "fl");
+      if (debug) Serial.println("fl");
+    }
   } else {
     server.send(200, "text/plain", "np");
     if (debug) Serial.println("np");
@@ -679,23 +736,28 @@ bool writeToFile(String filename, String data) {
 /**
    ------------------------------------------------------ Die LED-Sachen -----------------------------------------------------
 */
-void writeColor(unsigned int _red, unsigned int _green, unsigned int _blue) {
-  unsigned int red    = max((unsigned int) 0, min((unsigned int) 1023, (unsigned int) round((_red    * dimmer) / 1023.0f)));
-  unsigned int green  = max((unsigned int) 0, min((unsigned int) 1023, (unsigned int) round((_green  * dimmer) / 1023.0f)));
-  unsigned int blue   = max((unsigned int) 0, min((unsigned int) 1023, (unsigned int) round((_blue   * dimmer) / 1023.0f)));
-
+void writeColor(int _red, int _green, int _blue) {
+  int red   = constrain(round((_red    * dimmer) / 1023.0f), 0, 1023);
+  int green = constrain(round((_green    * dimmer) / 1023.0f), 0, 1023);
+  int blue  = constrain(round((_blue    * dimmer) / 1023.0f), 0, 1023);
+  
   analogWrite(ledR, red);
   analogWrite(ledG, green);
   analogWrite(ledB, blue);
 }
 
-void writeDimmer(unsigned int _dimmer) {
-  dimmer = max((unsigned int) 0, min((unsigned int) 1023, _dimmer));
+void writeColor(int _code) {
+  int code   = constrain(_code, 0, 15);
+  color[0] = defColors[code][0];
+  color[1] = defColors[code][1];
+  color[2] = defColors[code][2];
+}
+
+void writeDimmer(int _dimmer) {
+  dimmer = constrain(_dimmer, 0, 1023);
 }
 
 void writeRandomColor() {
-  unsigned int red    = (unsigned int) random(0, 1023);
-  unsigned int green  = (unsigned int) random(0, 1023);
-  unsigned int blue   = (unsigned int) random(0, 1023);
-  writeColor(red, green, blue);
+  int code = random(0, 14);
+  writeColor(code);
 }

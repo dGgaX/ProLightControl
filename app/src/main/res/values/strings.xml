@@ -1,18 +1,19 @@
 <resources>
     <string name="app_name">ProLight Control</string>
-    <string name="wifi_name">Gremote</string>
+    <string name="wifi_name">ProLight</string>
     <string name="welcome_message">Willkommen !!!</string>
-    <string name="icon_description">Gremote v2.0</string>
+    <string name="icon_description">ProLightControl v1.0</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
     <string name="ok">OK</string>
     <string name="cancel">Abbrechen</string>
-    <string name="main_activiy_device_found">Gremote gefunden</string>
-    <string name="main_activiy_device_search">Suche nach Gremote</string>
-    <string name="main_activiy_device_not_found">Keine Gremote gefunden.</string>
-    <string name="main_activiy_device_chooser_title">Gremote wählen</string>
+    <string name="search">Suchen</string>
+    <string name="main_activiy_device_found">ProLight gefunden</string>
+    <string name="main_activiy_device_search">Suche nach ProLight</string>
+    <string name="main_activiy_device_not_found">Keine ProLight gefunden.</string>
+    <string name="main_activiy_device_chooser_title">ProLight wählen</string>
 
-    <string name="main_activiy_location_permission_message" translatable="false">Um nach Ihrer Gremote suchen zu können, müssen wir Ihren Standort kennen.</string>
+    <string name="main_activiy_location_permission_message" translatable="false">Um nach Ihrer ProLight suchen zu können, müssen wir Ihren Standort kennen.</string>
     <string name="main_activiy_location_permission_title" translatable="false">Standortberechtigung</string>
 
     <string name="wifi_scanner_scan_success">Die Suche war Erfolgreich &#8230;</string>
@@ -107,4 +108,8 @@ Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming 
         <item>Gelb</item>
         <item>Blau</item>
     </string-array>
+    <string name="title_activity_play">PlayActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="play_activity_title">Play</string>
 </resources>

@@ -14,46 +14,52 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
-import de.abring.prolightcontrol.MainActivity;
+import de.abring.service.ServicesHandler;
+import de.abring.service.Services;
 
 import static android.util.Log.e;
+import static java.lang.Thread.sleep;
 
-public class MDNS extends Thread {
+public class MDNS {
 
     private static final String TAG = "MDNS";
 
     public static final String SIGNAL_WS_TCP_LOCAL = "_ws._tcp.local.";
 
     private final InetAddress inetAddress;
-    private final MDNSHandler handler;
+    private final ServicesHandler handler;
     private final ServiceListener serviceListener;
 
-    public MDNS(Context context) {
+    private Services services;
+
+    public MDNS(final Context context, final ServicesHandler handler) {
         this.inetAddress = getIP(context);
-        this.handler = ((MainActivity) context).serviceHandler;
+        this.handler = handler;
         this.serviceListener = new ServiceListener() {
             @Override
             public void serviceAdded(ServiceEvent event) {
                 ServiceInfo info = event.getInfo();
                 Log.d(TAG, "serviceAdded: " + info);
-                Message.obtain(handler, MDNSHandler.SERVICE_FOUND, info).sendToTarget();
+                Message.obtain(handler, ServicesHandler.SERVICE_FOUND, info).sendToTarget();
             }
 
             @Override
             public void serviceResolved(ServiceEvent event) {
                 ServiceInfo info = event.getInfo();
                 Log.d(TAG, "serviceResolved: " + info);
-                Message.obtain(handler, MDNSHandler.SERVICE_RESOLVED, info).sendToTarget();
+                Message.obtain(handler, ServicesHandler.SERVICE_RESOLVED, info).sendToTarget();
             }
 
             @Override
             public void serviceRemoved(ServiceEvent event) {
                 ServiceInfo info = event.getInfo();
                 Log.d(TAG, "serviceResolved: " + info);
-                Message.obtain(handler, MDNSHandler.SERVICE_REMOVED, info).sendToTarget();
+                Message.obtain(handler, ServicesHandler.SERVICE_REMOVED, info).sendToTarget();
             }
         };
     }
+
+
 
 
     private InetAddress getIP(Context context) {
@@ -70,33 +76,37 @@ public class MDNS extends Thread {
     }
 
     public void run() {
-        JmDNS jmdns = null;
-        boolean running = true;
-        try {
-            // Create a JmDNS instance
-            jmdns = JmDNS.create(inetAddress);
+        new Thread(new Runnable() {
+            public void run () {
+                JmDNS jmdns = null;
+                boolean running = true;
+                try {
+                    // Create a JmDNS instance
+                    jmdns = JmDNS.create(inetAddress);
 
-            // Register the Servicetype
-            jmdns.registerServiceType(SIGNAL_WS_TCP_LOCAL);
+                    // Register the Servicetype
+                    jmdns.registerServiceType(SIGNAL_WS_TCP_LOCAL);
 
-            // Add a service listener
-            jmdns.addServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
+                    // Add a service listener
+                    jmdns.addServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
 
-        } catch (IOException e) {
-            Log.e(TAG, "run: ", e);
-            running = false;
-        }
-        while (running) {
-            try {
-                sleep(500);
-            } catch(InterruptedException e) {
-                Log.e(TAG, "run: ", e);
-                running = false;
+                } catch (IOException e) {
+                    Log.e(TAG, "run: ", e);
+                    running = false;
+                }
+                while (running) {
+                    try {
+                        sleep(500);
+                    } catch(InterruptedException e) {
+                        Log.e(TAG, "run: ", e);
+                        running = false;
+                    }
+                }
+                if (jmdns != null) {
+                    jmdns.removeServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
+                    jmdns = null;
+                }
             }
-        }
-        if (jmdns != null) {
-            jmdns.removeServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
-            jmdns = null;
-        }
-    }
+        });
+     }
 }

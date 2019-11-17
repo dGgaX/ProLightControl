@@ -2,21 +2,27 @@ package de.abring.internet;
 
 import android.util.Log;
 
+import java.util.List;
+
 public class DeviceCommunicator {
 
     private static final String TAG = "DeviceCommunicator";
 
-    private static final String IP = "http://192.168.4.1/";
+    private final List<String> ips;
+
+    public DeviceCommunicator(List<String> ips) {
+        this.ips = ips;
+    }
 
 
-    public abstract static class Blink {
+    public abstract class Blink {
         public static final int ON = 0;
         public static final int OFF = 1;
         public static final int TOGGLE = 2;
         public Blink(int state) {
-            Log.d(TAG, "blink: " + String.valueOf(state));
+            Log.d(TAG, "blink: " + state);
 
-            String url = IP + "blink?";
+            String url = "blink?";
 
             switch (state) {
                 case ON:
@@ -30,62 +36,19 @@ public class DeviceCommunicator {
                     break;
             }
 
-            new GetUrlContentTask() {
-                @Override
-                public void getResult(boolean success, String content) {
-                    Log.d(TAG, "blink: " + content);
-                    finished(success);
-                }
-            }.execute(url);
+            execute(url);
         }
-
-        public abstract void finished(boolean success);
-
-    }
-    public abstract static class AddRemote {
-        public static final int START = 0;
-        public static final int KEY = 1;
-        public static final int FIN_FB = 2;
-        public static final int NEU_FB = 3;
-        public static final int END = 4;
-        public static final int CANCEL = 5;
-        public AddRemote(int page) {
-            Log.d(TAG, "addRemote: " + String.valueOf(page));
-
-            String url = IP;
-
-            switch (page) {
-                case START:
-                    url += "start";
-                    break;
-                case KEY:
-                    url += "key";
-                    break;
-                case FIN_FB:
-                    url += "finFB";
-                    break;
-                case NEU_FB:
-                    url += "neuFB";
-                    break;
-                case END:
-                    url += "end2";
-                    break;
-                case CANCEL:
-                    url += "cancel";
-                    break;
-            }
-
-            new GetUrlContentTask() {
-                @Override
-                public void getResult(boolean success, String content) {
-                    finished(success, content);
-                }
-            }.execute(url);
-        }
-
-        public abstract void finished(boolean success, String content);
 
     }
 
-
+    private void execute(String... url) {
+        for (String ip : ips) {
+            new GetUrlContentTask() {
+                @Override
+                public void getResult(boolean success, String content) {
+                    Log.d(TAG, "execute: " + content);
+                }
+            }.execute(ip + url);
+        }
+    }
 }
