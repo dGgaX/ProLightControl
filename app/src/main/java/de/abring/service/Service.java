@@ -2,6 +2,16 @@ package de.abring.service;
 
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,31 +24,37 @@ import de.abring.prolightcontrol.R;
 
 public class Service implements Serializable {
 
-    public static final String SIGNAL_WS_TCP_LOCAL = "_ws._tcp.local.";
-    public static final String SIGNAL_APPLICATION = "ws";
-    public static final String SIGNAL_PREFIX = "ProLight";
+    public static final String SIGNAL_WS_TCP_LOCAL = "_http._tcp.local.";
+    public static final String SIGNAL_APPLICATION = "http";
+    public static final String SIGNAL_PREFIX = "PL_";
 
-    public static Service fromServiceInfo (ServiceInfo info) {
+    public static Service fromServiceInfo (ServiceInfo info, RequestQueue queue) {
         if (info.getApplication().equals(SIGNAL_APPLICATION) &&
                 info.getName().startsWith(SIGNAL_PREFIX) &&
                 info.getType().equals(SIGNAL_WS_TCP_LOCAL)) {
             if (info.getHostAddresses().length == 0) {
-                return new Service(info.getName().substring(SIGNAL_PREFIX.length()));
+                return new Service(info.getName().substring(SIGNAL_PREFIX.length()), queue);
             }
-            return new Service(info.getName().substring(SIGNAL_PREFIX.length()), info.getApplication() + "://" + info.getHostAddresses()[0] + ":" + String.valueOf(info.getPort()));
+            return new Service(info.getName().substring(SIGNAL_PREFIX.length()), info.getApplication() + "://" + info.getHostAddresses()[0] + ":" + String.valueOf(info.getPort()), queue);
         }
         return null;
     }
 
-
     private static final String TAG = "Service";
+
+
+    private float mult = (1023.0f / 255.0f);
+    private float diff = (255.0f / 1023.0f);
 
     private final String name;
     private final URI uri;
-    private final List<Remote> remotes;
 
     private int icon;
     private int removeIcon;
+
+    public boolean powerOn = false;
+    public int mixedColor = 0;
+    public int dimmer = 0;
 
     private boolean inactiv;
     private boolean showBucket;
@@ -55,89 +71,44 @@ public class Service implements Serializable {
         return null;
     }
 
-    public Service() {
+    public transient RequestQueue queue;
+
+    public Service(RequestQueue queue) {
+        this.queue = queue;
         this.name = "";
         this.uri = stringToURI("");
-        this.remotes = new ArrayList<>();
         this.icon = R.drawable.ic_icon_wt;
         this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 
-    public Service(String name) {
+    public Service(String name, RequestQueue queue) {
+        this.queue = queue;
         this.name = name;
         this.uri = stringToURI("");
-        this.remotes = new ArrayList<>();
         this.icon = R.drawable.ic_icon_wt;
         this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
     }
 
-    public Service(String name, URI uri) {
+    public Service(String name, URI uri, RequestQueue queue) {
+        this.queue = queue;
         this.name = name;
         this.uri = uri;
-        this.remotes = new ArrayList<>();
         this.icon = R.drawable.ic_icon_wt;
         this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
+
     }
 
-    public Service(String name, String uri) {
+    public Service(String name, String uri, RequestQueue queue) {
+        this.queue = queue;
         this.name = name;
         this.uri = stringToURI(uri);
-        this.remotes = new ArrayList<>();
         this.icon = R.drawable.ic_icon_wt;
         this.removeIcon = R.drawable.ic_delete_foreground;
         this.inactiv = false;
-    }
 
-    public Remote getRemote(int i) {
-        return remotes.get(i);
-    }
-
-    public void addRemote(Remote remote) {
-        if (!updateRemote(remote)) {
-            if (remote.name.toUpperCase().startsWith("INDEX")) {
-                Log.i(TAG, "addRemote: Index @ position 0");
-                remotes.add(0, remote);
-            } else {
-                Log.i(TAG, "addRemote: " + remote.name);
-                remotes.add(remote);
-            }
-        }
-    }
-
-    public boolean updateRemote(Remote remote) {
-        for (Remote lRemote : remotes) {
-            if (lRemote.name.equals(remote.name)) {
-                Log.i(TAG, "updateRemote: " + remote.name);
-                remotes.set(remotes.indexOf(lRemote), remote);
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    // perhaps just delete all Remotes and ad the new ones... ?
-    public boolean removeRemote(Remote remote) {
-        for (Remote lRemote : remotes) {
-            if (lRemote.name.equals(remote.name)) {
-                Log.i(TAG, "removeRemote: " + remote.name);
-                remotes.remove(lRemote);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void clearRemotes() {
-        Log.i(TAG, "clearRemotes: all Remotes removed");
-        remotes.clear();
-    }
-
-    public int numberOfRemotes() {
-        return remotes.size();
     }
 
     public String getName() {
@@ -185,15 +156,6 @@ public class Service implements Serializable {
         return uri.toString();
     }
 
-    public Remote getRemoteByName(String name) {
-        for (Remote remote : remotes) {
-            if (remote.name.equals(name)) {
-                return remote;
-            }
-        }
-        return null;
-    }
-
     public void showBucket(boolean b) {
         this.showBucket = b;
     }
@@ -202,11 +164,70 @@ public class Service implements Serializable {
         return this.showBucket;
     }
 
-    public boolean updateRemotes(Service service) {
-        for (int i = 0; i < service.numberOfRemotes(); i++) {
-            Remote remote = service.getRemote(i);
-            addRemote(remote);
+    private void sendRequest(String ... param) {
+        String params = "";
+        for (int i = 0; i < param.length; i++) {
+            params += param[i];
+            if (i < param.length - 1) {
+                params += "&";
+            }
         }
-        return false;
+
+        String url = getUriAsString() + "?" + params;
+
+        Log.d(TAG, "sendRequest: " + url);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "onErrorResponse: ", error);
+                    }
+                });
+        stringRequest.setTag(TAG);
+        queue.add(stringRequest);
+    }
+
+    public void setPowerOn(boolean powerOn) {
+        this.powerOn = powerOn;
+        String param = "powerOn=";
+        if (powerOn) {
+            param += "true";
+        } else {
+            param += "false";
+        }
+        sendRequest(param);
+    }
+
+    public void setColor(int selectedColor) {
+        mixedColor = selectedColor;
+        Log.d(TAG, "onColorSelected mix: " + Integer.toHexString(selectedColor));
+        int red = Math.round(mult * (float) ((selectedColor >> 16) & 0xff));
+        int green = Math.round(mult * (float) ((selectedColor >> 8) & 0xff));
+        int blue = Math.round(mult * (float) ((selectedColor >> 0) & 0xff));
+        Log.d(TAG, "onColorSelected red: " + Integer.toString(red));
+        Log.d(TAG, "onColorSelected green: " + Integer.toString(green));
+        Log.d(TAG, "onColorSelected blue: " + Integer.toString(blue));
+
+        String paramRed = "red=" + Integer.toString(red);
+        String paramGreen = "green=" + Integer.toString(green);
+        String paramBlue = "blue=" + Integer.toString(blue);
+        sendRequest(paramRed, paramGreen, paramBlue);
+    }
+
+    public void setQueue(RequestQueue queue) {
+        this.queue = queue;
+    }
+
+    public void setDimmer(int dimmer) {
+        this.dimmer = dimmer;
+        String paramDimmer = "dimmer=" + Integer.toString(dimmer);
+        sendRequest(paramDimmer);
     }
 }

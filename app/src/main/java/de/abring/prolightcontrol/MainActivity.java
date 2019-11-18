@@ -1,6 +1,8 @@
 package de.abring.prolightcontrol;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -8,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,12 +19,19 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import javax.jmdns.ServiceInfo;
+
 import de.abring.MDNS.MDNS;
+import de.abring.internet.ServiceRequest;
+import de.abring.service.Service;
+import de.abring.service.ServiceAdapter;
 import de.abring.service.ServicesHandler;
-import de.abring.internet.DeviceCommunicator;
 import de.abring.service.Services;
 import de.abring.wifi.WiFi;
 
@@ -30,16 +40,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
 
-    private ImageView logo;
-    private ProgressBar progressBar;
-    private TextView text;
     private FloatingActionButton fab_scan_mdns;
-    private FloatingActionButton fab_scan_wifi;
 
     private Services services;
     private ServicesHandler handler;
+
+    private RecyclerView mRecyclerView;
+    private ServiceAdapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
+    private RequestQueue queue;
+
     private WiFi wifi;
-    private MDNS mDNS;
     private AlertDialog.Builder builder;
     private AlertDialog dialog;
 
@@ -50,23 +62,53 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setTitle(R.string.app_name);
 
-        logo = findViewById(R.id.imageView);
-        progressBar = findViewById(R.id.progressBar);
-        text = findViewById(R.id.textView);
-        fab_scan_wifi = findViewById(R.id.fab_scan_wifi);
+        // Instantiate the RequestQueue.
+        queue = Volley.newRequestQueue(getApplicationContext());
+
         fab_scan_mdns = findViewById(R.id.fab_scan_mdns);
 
-        services = new Services(getApplicationContext());
-        handler = new ServicesHandler(services);
-        wifi = new WiFi(getApplicationContext(), handler);
-        mDNS = new MDNS(getApplicationContext(), handler);
-
-        fab_scan_wifi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startWifiSearch();
+        services = new Services(this, queue);
+        handler = new ServicesHandler(services){
+            public void handleMessage(Message msg) {
+                String text = "";
+                switch (msg.what) {
+                    case ServicesHandler.SERVICE_FOUND:
+                        services.addService(Service.fromServiceInfo((ServiceInfo) msg.obj, queue));
+                        break;
+                    case ServicesHandler.SERVICE_RESOLVED:
+                        ServiceInfo updateInfo = (ServiceInfo) msg.obj;
+                        Service service = Service.fromServiceInfo(updateInfo, queue);
+                        if (services.updateService(service)) {
+                            new ServiceRequest(service) {
+                                @Override
+                                public void finished(Service service) {
+                                    mAdapter.notifyDataSetChanged();
+                                }
+                            };
+                            text = updateInfo.getName() + " updated!";
+                        }
+                        break;
+                    case ServicesHandler.SERVICE_REMOVED:
+                        ServiceInfo deleteInfo = (ServiceInfo) msg.obj;
+                        if (services.removeService(Service.fromServiceInfo(deleteInfo, queue))) {
+                            text = deleteInfo.getName() + " deleted!";
+                        }
+                        break;
+                }
+                if (!text.isEmpty()) {
+                    Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+                    toast.show();
+                }
             }
-        });
+        };
+
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mRecyclerView.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(this);
+        mAdapter = services.getAdapter();
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setAdapter(mAdapter);
+        wifi = new WiFi(getApplicationContext(), handler);
 
         fab_scan_mdns.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,13 +154,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         dialog.hide();
+        startMDNSSearch();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause: end ...");
-        wifi.reconnectToDefaultNetwork();
+    }
+
+    @Override
+    protected void onStop () {
+        super.onStop();
+        if (queue != null) {
+            queue.cancelAll(TAG);
+        }
     }
 
     private void showLegalNotice() {
@@ -134,8 +189,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMDNSSearch() {
-        //dialog.show();
-        mDNS.run();
+        new MDNS(getApplicationContext(), handler) {
+            @Override
+            public void finished() {
+                mAdapter.updateStates();
+            }
+        }.execute();
     }
 
     private void startWifiSearch() {

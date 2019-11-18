@@ -9,12 +9,15 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.RequestQueue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
+import de.abring.prolightcontrol.ControlActivity;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -30,13 +33,13 @@ public class Services {
     private final Context context;
     private final List<Service> list;
 
-    private RecyclerView.Adapter adapter;
+    private ServiceAdapter adapter;
     private boolean showDelete = false;
 
-    public Services(Context context) {
+    public Services(Context context, RequestQueue queue) {
         this.context = context;
         list = load();
-        adapter = new ServiceAdapter(context, list);
+        adapter = new ServiceAdapter(context, queue, list);
         ((ServiceAdapter) adapter).addServiceClickListener(new ServiceClickListener() {
             @Override
             public void onServiceClick(int position) {
@@ -49,46 +52,32 @@ public class Services {
                     showRemoveFida(false);
                 }
             }
+
+            @Override
+            public void onSwitchClick(int position, boolean powerOn) {
+                switchService(position, powerOn);
+            }
         });
         if (list.size() == 1) {
             chooseService(0);
         }
     }
 
-    public void updateRemotes(Service service) {
-        Log.i(TAG, "updateRemotes: " + service.getName());
-        for (Service lService : list) {
-            if (lService.getName().equals(service.getName())) {
-                if (lService.updateRemotes(service)) {
-                    Log.d(TAG, "updateRemotes: update succeed");
-                    break;
-                }
-                Log.d(TAG, "updateRemotes: update failed");
-                break;
-            }
-        }
+    private void switchService(int position, boolean powerOn) {
+        list.get(position).setPowerOn(powerOn);
+
     }
 
     private void chooseService(int position) {
         Service service = list.get(position);
-        Log.i(TAG, "chooseService: choose: " + service.getName());
-        adapter.notifyItemChanged(position);
-        if (service.isInactiv()) {
-            Log.d(TAG, "chooseService: Service in unavailable");
-            Toast toast = Toast.makeText(context.getApplicationContext(), "Fida " + service.getName() + " is not available!", Toast.LENGTH_SHORT);
-            toast.show();
-            return;
-        }
-        
-        Log.d(TAG, "chooseService: switch to WebIrActivity");
-        Toast toast = Toast.makeText(context.getApplicationContext(), "Fida " + service.getName() + " chosen!", Toast.LENGTH_SHORT);
-        toast.show();
 
-        /*
-        Intent intent = new Intent(context, WebIRActivity.class);
+        Log.i(TAG, "chooseService: choose: " + service.getName());
+
+        Intent intent = new Intent(context, ControlActivity.class);
         intent.putExtra(INPUT_ACTIVITY_SERVICE, service);
-        context.startActivityForResult(intent, INPUT_ACTIVITY_RESULT);
-        */
+
+        context.startActivity(intent);
+
     }
 
     private List<Service> load() {
@@ -228,7 +217,7 @@ public class Services {
         }
     }
 
-    public RecyclerView.Adapter getAdapter() {
+    public ServiceAdapter getAdapter() {
         return adapter;
     }
 

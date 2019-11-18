@@ -10,20 +10,12 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceListener;
 
 import de.abring.service.ServicesHandler;
-import de.abring.internet.DeviceCommunicator;
 import de.abring.prolightcontrol.R;
-import de.abring.service.Service;
-import de.abring.service.Services;
 
 public class WiFi {
 

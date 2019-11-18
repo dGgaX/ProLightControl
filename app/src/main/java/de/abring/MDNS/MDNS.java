@@ -3,6 +3,7 @@ package de.abring.MDNS;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Message;
 import android.util.Log;
 
@@ -20,11 +21,11 @@ import de.abring.service.Services;
 import static android.util.Log.e;
 import static java.lang.Thread.sleep;
 
-public class MDNS {
+public abstract class MDNS extends AsyncTask<String, Void, String> {
 
     private static final String TAG = "MDNS";
 
-    public static final String SIGNAL_WS_TCP_LOCAL = "_ws._tcp.local.";
+    public static final String SIGNAL_WS_TCP_LOCAL = "_http._tcp.local.";
 
     private final InetAddress inetAddress;
     private final ServicesHandler handler;
@@ -59,8 +60,7 @@ public class MDNS {
         };
     }
 
-
-
+    public abstract void finished();
 
     private InetAddress getIP(Context context) {
         try {
@@ -75,38 +75,37 @@ public class MDNS {
         }
     }
 
-    public void run() {
-        new Thread(new Runnable() {
-            public void run () {
-                JmDNS jmdns = null;
-                boolean running = true;
-                try {
-                    // Create a JmDNS instance
-                    jmdns = JmDNS.create(inetAddress);
+    @Override
+    protected String doInBackground(String... strings) {
+        JmDNS jmdns = null;
+        boolean running = true;
+        try {
+            // Create a JmDNS instance
+            jmdns = JmDNS.create(inetAddress);
 
-                    // Register the Servicetype
-                    jmdns.registerServiceType(SIGNAL_WS_TCP_LOCAL);
+            // Register the Servicetype
+            jmdns.registerServiceType(SIGNAL_WS_TCP_LOCAL);
 
-                    // Add a service listener
-                    jmdns.addServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
+            // Add a service listener
+            jmdns.addServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
 
-                } catch (IOException e) {
-                    Log.e(TAG, "run: ", e);
-                    running = false;
-                }
-                while (running) {
-                    try {
-                        sleep(500);
-                    } catch(InterruptedException e) {
-                        Log.e(TAG, "run: ", e);
-                        running = false;
-                    }
-                }
-                if (jmdns != null) {
-                    jmdns.removeServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
-                    jmdns = null;
-                }
+        } catch (IOException e) {
+            Log.e(TAG, "run: ", e);
+            running = false;
+        }
+        while (running) {
+            try {
+                sleep(500);
+            } catch(InterruptedException e) {
+                Log.e(TAG, "run: ", e);
+                running = false;
             }
-        });
-     }
+        }
+        if (jmdns != null) {
+            jmdns.removeServiceListener(SIGNAL_WS_TCP_LOCAL, serviceListener);
+            jmdns = null;
+        }
+        finished();
+        return "";
+    }
 }

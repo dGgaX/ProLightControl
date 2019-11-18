@@ -112,4 +112,7 @@ Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming 
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
     <string name="play_activity_title">Play</string>
+    <string name="power_off">Off</string>
+    <string name="power_on">On</string>
+    <string name="power">Power</string>
 </resources>

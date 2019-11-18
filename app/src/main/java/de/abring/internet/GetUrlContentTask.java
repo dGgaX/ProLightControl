@@ -6,19 +6,28 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public abstract class GetUrlContentTask extends AsyncTask<String, Integer, String> {
 
     private static final String TAG = "GetUrlContentTask";
     private boolean success = false;
+    private URL url = null;
+
+    public GetUrlContentTask(String url) {
+        try {
+            this.url = new URL(url);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected String doInBackground(String... urls) {
         String content = "";
-        URL url = null;
         HttpURLConnection connection = null;
         try {
-            url = new URL(urls[0]);
             Log.d(TAG, "doInBackground: url: " + url);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");

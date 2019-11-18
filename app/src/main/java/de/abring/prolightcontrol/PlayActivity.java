@@ -16,14 +16,9 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.abring.internet.DeviceCommunicator;
 import de.abring.prolightcontrol.ui.main.SectionsPagerAdapter;
 
 public class PlayActivity extends AppCompatActivity {
-
-    DeviceCommunicator deviceCommunicator;
-
-    List<String> ips;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +30,6 @@ public class PlayActivity extends AppCompatActivity {
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
-        ips = new ArrayList<>();
-        deviceCommunicator = new DeviceCommunicator(ips);
+
     }
 }
